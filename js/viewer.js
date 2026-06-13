@@ -174,7 +174,7 @@
     input.addEventListener('input', () => {
       const q = input.value.trim();
       clear.classList.toggle('hidden', q.length === 0);
-      if (q.length < 3) { results.classList.add('hidden'); return; }
+      if (q.length === 0 || q.length < 3) { results.classList.add('hidden'); return; }
       renderSearchResults(q);
     });
 
