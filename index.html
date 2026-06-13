@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Моя кладовка</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <header class="header">
+      <h1>📦 Моя кладовка</h1>
+      <div class="breadcrumbs" id="breadcrumbs"></div>
+      <button class="btn-back hidden" id="btn-back">← Назад</button>
+    </header>
+
+    <p class="screen-title" id="screen-title"></p>
+
+    <main class="scene">
+      <div id="loading" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.9rem;gap:10px">
+        <span style="animation:spin 1s linear infinite;display:inline-block">⏳</span> Загрузка...
+      </div>
+      <div class="photo-wrapper" id="photo-wrapper"></div>
+    </main>
+
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h2 id="modal-title"></h2>
+        <button class="modal-close" id="modal-close" aria-label="Закрыть">✕</button>
+      </div>
+      <div class="modal-body">
+        <ul id="modal-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/viewer.js"></script>
+</body>
+</html>
