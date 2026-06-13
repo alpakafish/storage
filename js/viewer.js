@@ -165,9 +165,113 @@
     });
   }
 
+  // ===== SEARCH =====
+  function setupSearch() {
+    const input = document.getElementById('search-input');
+    const clear = document.getElementById('search-clear');
+    const results = document.getElementById('search-results');
+
+    input.addEventListener('input', () => {
+      const q = input.value.trim();
+      clear.classList.toggle('hidden', q.length === 0);
+      if (q.length < 3) { results.classList.add('hidden'); return; }
+      renderSearchResults(q);
+    });
+
+    clear.addEventListener('click', () => {
+      input.value = '';
+      clear.classList.add('hidden');
+      results.classList.add('hidden');
+      input.focus();
+    });
+
+    // Close results on outside click
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.search-wrap')) results.classList.add('hidden');
+    });
+    input.addEventListener('focus', () => {
+      if (input.value.trim().length >= 3) results.classList.remove('hidden');
+    });
+  }
+
+  function renderSearchResults(query) {
+    const results = document.getElementById('search-results');
+    const hits = searchData(query);
+
+    if (!hits.length) {
+      results.innerHTML = `<div class="search-no-results">Ничего не найдено по запросу «${escHtml(query)}»</div>`;
+      results.classList.remove('hidden');
+      return;
+    }
+
+    results.innerHTML = hits.map(hit => `
+      <div class="search-result-item" data-hit='${JSON.stringify(hit)}'>
+        <div class="result-path">${escHtml(hit.path)}</div>
+        <div class="result-match">${highlightMatch(hit.text, query)}</div>
+      </div>
+    `).join('');
+
+    results.querySelectorAll('.search-result-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const hit = JSON.parse(el.dataset.hit);
+        results.classList.add('hidden');
+        document.getElementById('search-input').value = '';
+        document.getElementById('search-clear').classList.add('hidden');
+        if (hit.shelfId) {
+          const shelf = state.data.items.find(i => i.id === hit.shelfId);
+          if (shelf) { renderShelf(shelf); setTimeout(() => openModal(hit.boxLabel, hit.contents), 200); }
+        } else {
+          renderMain();
+          setTimeout(() => openModal(hit.boxLabel, hit.contents), 200);
+        }
+      });
+    });
+
+    results.classList.remove('hidden');
+  }
+
+  function searchData(query) {
+    if (!state.data) return [];
+    const q = query.toLowerCase();
+    const hits = [];
+
+    state.data.items.forEach(item => {
+      if (item.type === 'shelf-multi') {
+        (item.boxes || []).forEach(box => {
+          (box.contents || []).forEach(text => {
+            if (text.toLowerCase().includes(q)) {
+              hits.push({ path: `${item.label} › ${box.label}`, text, boxLabel: box.label, contents: box.contents, shelfId: item.id });
+            }
+          });
+        });
+      } else {
+        (item.contents || []).forEach(text => {
+          if (text.toLowerCase().includes(q)) {
+            hits.push({ path: item.label, text, boxLabel: item.label, contents: item.contents, shelfId: null });
+          }
+        });
+      }
+    });
+
+    return hits;
+  }
+
+  function highlightMatch(text, query) {
+    const idx = text.toLowerCase().indexOf(query.toLowerCase());
+    if (idx === -1) return escHtml(text);
+    return escHtml(text.slice(0, idx)) +
+      '<mark>' + escHtml(text.slice(idx, idx + query.length)) + '</mark>' +
+      escHtml(text.slice(idx + query.length));
+  }
+
+  function escHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-back').addEventListener('click', renderMain);
     setupModal();
+    setupSearch();
     init();
   });
 })();
