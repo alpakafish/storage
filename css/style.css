@@ -147,13 +147,6 @@ html, body { height: 100%; font-family: 'Inter', system-ui, sans-serif; backgrou
 .dot.type-shelf-multi { background: var(--dot-multi); color: var(--dot-multi); }
 .dot.type-box { background: var(--dot-box); color: var(--dot-box); }
 
-/* Pulse animation */
-@keyframes pulse {
-  0%, 100% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
-  50% { box-shadow: 0 0 0 6px transparent; opacity: 0.8; }
-}
-.dot { animation: pulse 2.5s ease-in-out infinite; }
-.dot:hover { animation: none; }
 
 /* ===== LEGEND ===== */
 .legend {
