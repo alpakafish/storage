@@ -34,6 +34,21 @@
   }
 
   // ===== TAB 1: PHOTOS =====
+  function photoInputHTML(inputId, currentValue, previewId) {
+    return `
+      <div class="photo-input-row">
+        <input class="input" id="${inputId}" type="text" value="${escHtml(currentValue)}" placeholder="https://... или photos/имя-файла.jpg">
+        <button class="btn-browse" onclick="AdminApp.browsePhoto('${inputId}', '${previewId}')">📁 Выбрать файл</button>
+      </div>
+      <div class="photo-hint">
+        Чтобы использовать фото с компьютера:<br>
+        1. Скопируйте файл в папку <code>storage-map/photos/</code><br>
+        2. Нажмите «Выбрать файл» → найдите файл в папке <code>photos/</code><br>
+        3. Нажмите «Сохранить» → затем сделайте <code>git add -A && git commit -m "фото" && git push</code>
+      </div>
+    `;
+  }
+
   function renderPhotosTab() {
     const el = document.getElementById('tab-photos');
     el.innerHTML = `
@@ -41,11 +56,11 @@
         <div class="section-title">Главное фото кладовки</div>
         <div class="card">
           <div class="form-group">
-            <label class="form-label">URL фотографии</label>
-            <input class="input" id="main-photo-url" type="url" value="${escHtml(data.mainPhoto)}" placeholder="https://...">
+            <label class="form-label">Фотография</label>
+            ${photoInputHTML('main-photo-url', data.mainPhoto, 'main-photo-preview-img')}
           </div>
           <div class="photo-preview-wrap" id="main-photo-preview">
-            <img src="${escHtml(data.mainPhoto)}" alt="Предпросмотр">
+            <img id="main-photo-preview-img" src="${escHtml(data.mainPhoto)}" alt="Предпросмотр">
           </div>
           <div class="btn-row">
             <button class="btn btn-primary" onclick="AdminApp.saveMainPhoto()">Сохранить</button>
@@ -60,11 +75,11 @@
               <div class="card-title">${escHtml(shelf.label)}<span class="type-badge shelf-multi">2 ряда</span></div>
             </div>
             <div class="form-group">
-              <label class="form-label">URL фотографии полки</label>
-              <input class="input" id="shelf-photo-${shelf.id}" type="url" value="${escHtml(shelf.photo || '')}" placeholder="https://...">
+              <label class="form-label">Фотография полки</label>
+              ${photoInputHTML(`shelf-photo-${shelf.id}`, shelf.photo || '', `shelf-photo-preview-img-${shelf.id}`)}
             </div>
             <div class="photo-preview-wrap">
-              <img id="shelf-photo-preview-${shelf.id}" src="${escHtml(shelf.photo || '')}" alt="Предпросмотр" onerror="this.style.display='none'" style="${shelf.photo ? '' : 'display:none'}">
+              <img id="shelf-photo-preview-img-${shelf.id}" src="${escHtml(shelf.photo || '')}" alt="Предпросмотр" onerror="this.style.display='none'" style="${shelf.photo ? '' : 'display:none'}">
             </div>
             <div class="btn-row">
               <button class="btn btn-primary" onclick="AdminApp.saveShelfPhoto('${shelf.id}')">Сохранить</button>
@@ -74,17 +89,38 @@
       </div>
     `;
 
+    // Live preview on input
     document.getElementById('main-photo-url').addEventListener('input', function () {
-      document.querySelector('#main-photo-preview img').src = this.value;
+      document.getElementById('main-photo-preview-img').src = this.value;
     });
     data.items.filter(i => i.type === 'shelf-multi').forEach(shelf => {
       const inp = document.getElementById(`shelf-photo-${shelf.id}`);
       if (inp) inp.addEventListener('input', function () {
-        const prev = document.getElementById(`shelf-photo-preview-${shelf.id}`);
+        const prev = document.getElementById(`shelf-photo-preview-img-${shelf.id}`);
         if (prev) { prev.src = this.value; prev.style.display = ''; }
       });
     });
   }
+
+  // Browse local file → fill input with relative path and show preview
+  window.AdminApp.browsePhoto = function (inputId, previewId) {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.onchange = function () {
+      const file = fileInput.files[0];
+      if (!file) return;
+      // Fill URL field with relative path
+      const relativePath = 'photos/' + file.name;
+      const inp = document.getElementById(inputId);
+      if (inp) { inp.value = relativePath; inp.dispatchEvent(new Event('input')); }
+      // Show local preview via object URL
+      const prev = document.getElementById(previewId);
+      if (prev) { prev.src = URL.createObjectURL(file); prev.style.display = ''; }
+      showToast(`Путь заполнен: ${relativePath} — не забудьте скопировать файл в папку photos/ и сделать git push`);
+    };
+    fileInput.click();
+  };
 
   window.AdminApp = window.AdminApp || {};
 
