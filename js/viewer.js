@@ -171,12 +171,15 @@
     const clear = document.getElementById('search-clear');
     const results = document.getElementById('search-results');
 
-    input.addEventListener('input', () => {
+    function handleSearchInput() {
       const q = input.value.trim();
       clear.classList.toggle('hidden', q.length === 0);
       if (q.length === 0 || q.length < 3) { results.classList.add('hidden'); return; }
       renderSearchResults(q);
-    });
+    }
+
+    input.addEventListener('input', handleSearchInput);
+    input.addEventListener('search', handleSearchInput); // срабатывает при нативной очистке браузером
 
     clear.addEventListener('click', () => {
       input.value = '';
